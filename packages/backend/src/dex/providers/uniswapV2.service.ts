@@ -47,7 +47,7 @@ export class UniswapV2Service extends BaseDexService {
       );
 
       const path = [tokenIn, tokenOut];
-      const amounts = await router.getAmountsOut(amountIn, path);
+      const amounts = (await router.getAmountsOut(amountIn, path)) as bigint[];
 
       if (amounts.length < 2) {
         return null;
@@ -55,18 +55,10 @@ export class UniswapV2Service extends BaseDexService {
 
       const amountOut = amounts[1].toString();
 
-      // 간단한 가스 추정 (실제로는 더 정확한 계산 필요)
-      const gasEstimate = '150000';
-
-      // 가격 영향도 계산 (실제로는 풀 정보를 가져와서 계산)
-      const priceImpact = 0.1; // 임시 값
-
       return {
-        dex: `${this.name} (${this.chainId})`,
+        dex: this.name,
         chainId: this.chainId,
         amountOut,
-        priceImpact,
-        gasEstimate,
         route: [tokenIn, tokenOut],
       };
     } catch (error) {
@@ -86,11 +78,11 @@ export class UniswapV2Service extends BaseDexService {
 
       const token = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
 
-      const [symbol, name, decimals] = await Promise.all([
+      const [symbol, name, decimals] = (await Promise.all([
         token.symbol(),
         token.name(),
         token.decimals(),
-      ]);
+      ])) as [string, string, string];
 
       return {
         address: tokenAddress,

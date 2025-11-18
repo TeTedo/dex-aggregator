@@ -47,22 +47,18 @@ export class SushiswapService extends BaseDexService {
       );
 
       const path = [tokenIn, tokenOut];
-      const amounts = await router.getAmountsOut(amountIn, path);
+      const amounts = (await router.getAmountsOut(amountIn, path)) as bigint[];
 
       if (amounts.length < 2) {
         return null;
       }
 
       const amountOut = amounts[1].toString();
-      const gasEstimate = '150000';
-      const priceImpact = 0.1; // 임시 값
 
       return {
-        dex: `${this.name} (${this.chainId})`,
+        dex: this.name,
         chainId: this.chainId,
         amountOut,
-        priceImpact,
-        gasEstimate,
         route: [tokenIn, tokenOut],
       };
     } catch (error) {
@@ -81,11 +77,11 @@ export class SushiswapService extends BaseDexService {
 
       const token = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
 
-      const [symbol, name, decimals] = await Promise.all([
+      const [symbol, name, decimals] = (await Promise.all([
         token.symbol(),
         token.name(),
         token.decimals(),
-      ]);
+      ])) as [string, string, string];
 
       return {
         address: tokenAddress,

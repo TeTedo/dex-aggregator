@@ -23,17 +23,11 @@ export class DexFactoryService {
       return this.dexInstances.get(key)!;
     }
 
-    // 체인에서 해당 DEX가 지원되는지 확인
-    const supportedDexes = this.chainService.getSupportedDexes(chainId);
-    if (!supportedDexes.includes(dexName)) {
-      return null;
-    }
-
     // DEX 서비스 인스턴스 생성
     let dexService: BaseDexService;
 
     try {
-      switch (dexName.toLowerCase()) {
+      switch (dexName) {
         case 'uniswapV2':
           dexService = new UniswapV2Service(chainId, this.chainService);
           break;

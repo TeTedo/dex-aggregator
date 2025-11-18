@@ -6,8 +6,6 @@ export interface SwapQuote {
   dex: string;
   chainId: ChainId;
   amountOut: string;
-  priceImpact: number;
-  gasEstimate: string;
   route: string[];
 }
 

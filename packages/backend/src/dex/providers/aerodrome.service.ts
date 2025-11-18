@@ -52,16 +52,16 @@ export class AerodromeService extends BaseDexService {
 
       let amounts: bigint[];
       try {
-        const result = await router.getAmountsOut(amountIn, path);
+        const result = (await router.getAmountsOut(amountIn, path)) as bigint[];
         amounts = result.map((val: bigint) => BigInt(val.toString()));
       } catch {
         // getAmountsOut가 실패하면 getAmountOut 시도
         try {
-          const [amount] = await router.getAmountOut(
+          const [amount] = (await router.getAmountOut(
             amountIn,
             tokenIn,
             tokenOut,
-          );
+          )) as [bigint, boolean];
           amounts = [BigInt(amountIn), BigInt(amount.toString())];
         } catch {
           return null;
@@ -73,15 +73,11 @@ export class AerodromeService extends BaseDexService {
       }
 
       const amountOut = amounts[1].toString();
-      const gasEstimate = '150000';
-      const priceImpact = 0.1; // 임시 값
 
       return {
-        dex: `${this.name} (${this.chainId})`,
+        dex: this.name,
         chainId: this.chainId,
         amountOut,
-        priceImpact,
-        gasEstimate,
         route: [tokenIn, tokenOut],
       };
     } catch (error) {
@@ -100,11 +96,11 @@ export class AerodromeService extends BaseDexService {
 
       const token = new ethers.Contract(tokenAddress, erc20Abi, this.provider);
 
-      const [symbol, name, decimals] = await Promise.all([
+      const [symbol, name, decimals] = (await Promise.all([
         token.symbol(),
         token.name(),
         token.decimals(),
-      ]);
+      ])) as [string, string, string];
 
       return {
         address: tokenAddress,
