@@ -70,3 +70,28 @@ export async function getTokenInfo(
   if (!response.ok) return null;
   return response.json();
 }
+
+export interface LiquidityQuote {
+  dex: string;
+  lpTokens: string;
+  share: number;
+}
+
+export async function getLiquidityQuote(
+  chainId: number,
+  tokenA: string,
+  tokenB: string,
+  amountA: string,
+  amountB: string
+): Promise<{ chainId: number; quotes: LiquidityQuote[] }> {
+  const params = new URLSearchParams({
+    chainId: chainId.toString(),
+    tokenA,
+    tokenB,
+    amountA,
+    amountB,
+  });
+  const response = await fetch(`${API_BASE_URL}/dex/liquidity/quote?${params}`);
+  if (!response.ok) throw new Error("Failed to fetch liquidity quote");
+  return response.json();
+}

@@ -20,6 +20,16 @@ export abstract class BaseDexService {
   abstract getTokenInfo(tokenAddress: string): Promise<TokenInfo | null>;
 
   /**
+   * 유동성 추가 시 받게 될 LP 토큰 수량을 계산합니다
+   */
+  abstract getLiquidityQuote(
+    tokenA: string,
+    tokenB: string,
+    amountA: string,
+    amountB: string,
+  ): Promise<{ lpTokens: string; share: number } | null>;
+
+  /**
    * 가격 영향도를 계산합니다
    */
   protected calculatePriceImpact(

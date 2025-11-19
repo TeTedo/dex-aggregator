@@ -137,4 +137,89 @@ export class DexService {
 
     return null;
   }
+
+  /**
+   * 유동성 추가 시 받게 될 LP 토큰 수량을 계산합니다
+   */
+  async getLiquidityQuote(
+    chainId: ChainId,
+    dexName: string,
+    tokenA: string,
+    tokenB: string,
+    amountA: string,
+    amountB: string,
+  ): Promise<{ lpTokens: string; share: number } | null> {
+    const dexService = this.dexFactory.getDexService(chainId, dexName);
+    if (!dexService) {
+      return null;
+    }
+
+    try {
+      return await dexService.getLiquidityQuote(
+        tokenA,
+        tokenB,
+        amountA,
+        amountB,
+      );
+    } catch (error) {
+      console.error(
+        `${dexName} liquidity quote error on chain ${chainId}:`,
+        error,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * 모든 DEX에서 유동성 견적을 조회합니다
+   */
+  async getAllLiquidityQuotes(
+    chainId: ChainId,
+    tokenA: string,
+    tokenB: string,
+    amountA: string,
+    amountB: string,
+  ): Promise<
+    Array<{
+      dex: string;
+      lpTokens: string;
+      share: number;
+    }>
+  > {
+    const dexServices = this.dexFactory.getAllDexServices(chainId);
+    const quotes: Array<{
+      dex: string;
+      lpTokens: string;
+      share: number;
+    }> = [];
+
+    const quotePromises = dexServices.map(async (dexService) => {
+      try {
+        const quote = await dexService.getLiquidityQuote(
+          tokenA,
+          tokenB,
+          amountA,
+          amountB,
+        );
+        if (quote) {
+          return {
+            dex: dexService.name,
+            lpTokens: quote.lpTokens,
+            share: quote.share,
+          };
+        }
+      } catch (error) {
+        console.error(
+          `${dexService.name} liquidity quote error on chain ${chainId}:`,
+          error,
+        );
+      }
+      return null;
+    });
+
+    const results = await Promise.all(quotePromises);
+    quotes.push(...results.filter((q) => q !== null));
+
+    return quotes;
+  }
 }

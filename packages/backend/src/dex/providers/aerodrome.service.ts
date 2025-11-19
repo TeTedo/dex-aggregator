@@ -12,17 +12,20 @@ export class AerodromeService extends BaseDexService {
   private provider: ethers.JsonRpcProvider;
   private routerAddress: string;
 
-  constructor(chainId: ChainId, chainService: ChainService) {
+  constructor(
+    chainId: ChainId,
+    private readonly chainService: ChainService,
+  ) {
     super();
     this.chainId = chainId;
 
-    const provider = chainService.getProvider(chainId);
+    const provider = this.chainService.getProvider(chainId);
     if (!provider) {
       throw new Error(`Provider not found for chain ${chainId}`);
     }
     this.provider = provider;
 
-    const dexConfig = chainService.getDexConfig(chainId, 'aerodrome');
+    const dexConfig = this.chainService.getDexConfig(chainId, 'aerodrome');
     if (!dexConfig) {
       throw new Error(`Aerodrome not configured for chain ${chainId}`);
     }
@@ -116,5 +119,16 @@ export class AerodromeService extends BaseDexService {
       );
       return null;
     }
+  }
+
+  async getLiquidityQuote(
+    tokenA: string,
+    tokenB: string,
+    amountA: string,
+    amountB: string,
+  ): Promise<{ lpTokens: string; share: number } | null> {
+    // Aerodrome은 Velodrome 포크이므로 유사한 로직 사용
+    // TODO: Aerodrome의 특정 구조에 맞게 구현 필요
+    return null;
   }
 }

@@ -129,4 +129,57 @@ export class DexController {
 
     return result;
   }
+
+  /**
+   * 유동성 추가 견적 조회 (모든 DEX)
+   */
+  @Get('liquidity/quote')
+  async getLiquidityQuote(
+    @Query('chainId', ParseIntPipe) chainId: number,
+    @Query('tokenA') tokenA: string,
+    @Query('tokenB') tokenB: string,
+    @Query('amountA') amountA: string,
+    @Query('amountB') amountB: string,
+  ) {
+    const quotes = await this.dexService.getAllLiquidityQuotes(
+      chainId as ChainId,
+      tokenA,
+      tokenB,
+      amountA,
+      amountB,
+    );
+
+    return {
+      chainId,
+      quotes,
+    };
+  }
+
+  /**
+   * 특정 DEX의 유동성 추가 견적 조회
+   */
+  @Get('liquidity/quote/:dexName')
+  async getLiquidityQuoteByDex(
+    @Query('chainId', ParseIntPipe) chainId: number,
+    @Query('tokenA') tokenA: string,
+    @Query('tokenB') tokenB: string,
+    @Query('amountA') amountA: string,
+    @Query('amountB') amountB: string,
+    @Param('dexName') dexName: string,
+  ) {
+    const quote = await this.dexService.getLiquidityQuote(
+      chainId as ChainId,
+      dexName,
+      tokenA,
+      tokenB,
+      amountA,
+      amountB,
+    );
+
+    return {
+      chainId,
+      dex: dexName,
+      quote,
+    };
+  }
 }
