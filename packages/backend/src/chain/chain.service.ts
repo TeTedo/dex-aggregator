@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ChainId, ChainConfig, CHAIN_CONFIGS } from './chain.config';
+import { ChainId, ChainConfig, CHAIN_CONFIGS, DexName } from './chain.config';
 import { ethers } from 'ethers';
 
 @Injectable()
@@ -49,16 +49,22 @@ export class ChainService {
   /**
    * 체인의 DEX 설정을 가져옵니다
    */
-  getDexConfig(chainId: ChainId, dexName: string) {
+  getDexConfig(chainId: ChainId, dexName: DexName) {
     const config = this.getChainConfig(chainId);
-    return config?.dexes[dexName] || null;
+    if (!config) {
+      return null;
+    }
+    if (!config.dexes[dexName]) {
+      return null;
+    }
+    return config.dexes[dexName];
   }
 
   /**
    * 체인에서 지원하는 DEX 목록을 반환합니다
    */
-  getSupportedDexes(chainId: ChainId): string[] {
+  getSupportedDexes(chainId: ChainId): DexName[] {
     const config = this.getChainConfig(chainId);
-    return config ? Object.keys(config.dexes) : [];
+    return config ? (Object.keys(config.dexes) as DexName[]) : [];
   }
 }

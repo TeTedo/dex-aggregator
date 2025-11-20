@@ -2,32 +2,30 @@ import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { BaseDexService } from './base-dex.service';
 import { SwapQuote, TokenInfo } from '../dex.service';
-import { ChainId } from '../../chain/chain.config';
+import { ChainId, DexName } from '../../chain/chain.config';
 import { ChainService } from '../../chain/chain.service';
 
 @Injectable()
 export class AerodromeService extends BaseDexService {
-  name = 'Aerodrome';
+  name = DexName.AERODROME;
   chainId: ChainId;
   private provider: ethers.JsonRpcProvider;
   private routerAddress: string;
-
   constructor(
     chainId: ChainId,
     private readonly chainService: ChainService,
   ) {
     super();
     this.chainId = chainId;
-
     const provider = this.chainService.getProvider(chainId);
     if (!provider) {
       throw new Error(`Provider not found for chain ${chainId}`);
     }
     this.provider = provider;
 
-    const dexConfig = this.chainService.getDexConfig(chainId, 'aerodrome');
+    const dexConfig = this.chainService.getDexConfig(chainId, this.name);
     if (!dexConfig) {
-      throw new Error(`Aerodrome not configured for chain ${chainId}`);
+      throw new Error(`${this.name} not configured for chain ${chainId}`);
     }
     this.routerAddress = dexConfig.router;
   }
@@ -84,7 +82,10 @@ export class AerodromeService extends BaseDexService {
         route: [tokenIn, tokenOut],
       };
     } catch (error) {
-      console.error(`Aerodrome quote error on chain ${this.chainId}:`, error);
+      console.error(
+        `${this.name} quote error on chain ${this.chainId}:`,
+        error,
+      );
       return null;
     }
   }
@@ -114,7 +115,7 @@ export class AerodromeService extends BaseDexService {
       };
     } catch (error) {
       console.error(
-        `Aerodrome token info error on chain ${this.chainId}:`,
+        `${this.name} token info error on chain ${this.chainId}:`,
         error,
       );
       return null;

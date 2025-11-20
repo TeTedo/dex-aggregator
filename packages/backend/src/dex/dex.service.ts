@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ChainId } from '../chain/chain.config';
+import { ChainId, DexName } from '../chain/chain.config';
 import { DexFactoryService } from './dex-factory.service';
 
 export interface SwapQuote {
@@ -143,7 +143,7 @@ export class DexService {
    */
   async getLiquidityQuote(
     chainId: ChainId,
-    dexName: string,
+    dexName: DexName,
     tokenA: string,
     tokenB: string,
     amountA: string,

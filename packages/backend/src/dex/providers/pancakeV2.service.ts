@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { BaseDexService } from './base-dex.service';
 import { SwapQuote, TokenInfo } from '../dex.service';
-import { ChainId } from '../../chain/chain.config';
+import { ChainId, DexName } from '../../chain/chain.config';
 import { ChainService } from '../../chain/chain.service';
 
 @Injectable()
 export class PancakeV2Service extends BaseDexService {
-  name = 'pancakeV2';
+  name = DexName.PANCAKESWAP_V2;
   chainId: ChainId;
   private provider: ethers.JsonRpcProvider;
   private routerAddress: string;
@@ -25,9 +25,9 @@ export class PancakeV2Service extends BaseDexService {
     }
     this.provider = provider;
 
-    const dexConfig = this.chainService.getDexConfig(chainId, 'pancakeV2');
+    const dexConfig = this.chainService.getDexConfig(chainId, this.name);
     if (!dexConfig) {
-      throw new Error(`Pancake not configured for chain ${chainId}`);
+      throw new Error(`${this.name} not configured for chain ${chainId}`);
     }
     this.routerAddress = dexConfig.router;
   }
@@ -65,7 +65,10 @@ export class PancakeV2Service extends BaseDexService {
         route: [tokenIn, tokenOut],
       };
     } catch (error) {
-      console.error(`Pancake quote error on chain ${this.chainId}:`, error);
+      console.error(
+        `${this.name} quote error on chain ${this.chainId}:`,
+        error,
+      );
       return null;
     }
   }
@@ -96,7 +99,7 @@ export class PancakeV2Service extends BaseDexService {
       };
     } catch (error) {
       console.error(
-        `Pancake token info error on chain ${this.chainId}:`,
+        `${this.name} token info error on chain ${this.chainId}:`,
         error,
       );
       return null;
@@ -110,10 +113,7 @@ export class PancakeV2Service extends BaseDexService {
     amountB: string,
   ): Promise<{ lpTokens: string; share: number } | null> {
     try {
-      const dexConfig = this.chainService.getDexConfig(
-        this.chainId,
-        'pancakeV2',
-      );
+      const dexConfig = this.chainService.getDexConfig(this.chainId, this.name);
       if (!dexConfig?.factory) {
         return null;
       }
@@ -187,13 +187,12 @@ export class PancakeV2Service extends BaseDexService {
       };
     } catch (error) {
       console.error(
-        `Pancake liquidity quote error on chain ${this.chainId}:`,
+        `${this.name} liquidity quote error on chain ${this.chainId}:`,
         error,
       );
       return null;
     }
   }
-  s;
 
   private sqrt(value: bigint): bigint {
     if (value < BigInt(0)) {

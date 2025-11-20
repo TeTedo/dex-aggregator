@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';
 import { DexService, SwapQuote, TokenInfo } from './dex.service';
-import { ChainId } from '../chain/chain.config';
+import { ChainId, DexName } from '../chain/chain.config';
 import { ChainService } from '../chain/chain.service';
 import { POPULAR_TOKENS } from './popular-tokens.config';
 
@@ -165,7 +165,7 @@ export class DexController {
     @Query('tokenB') tokenB: string,
     @Query('amountA') amountA: string,
     @Query('amountB') amountB: string,
-    @Param('dexName') dexName: string,
+    @Param('dexName') dexName: DexName,
   ) {
     const quote = await this.dexService.getLiquidityQuote(
       chainId as ChainId,
