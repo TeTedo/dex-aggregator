@@ -1,13 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Token, SwapQuote, ChainConfig, LiquidityQuote } from "@/lib/api";
-import {
-  getSupportedChains,
-  getPopularTokens,
-  getQuote,
-  getLiquidityQuote,
-} from "@/lib/api";
+import { Token, SwapQuote, ChainConfig } from "@/lib/api";
+import { getSupportedChains, getPopularTokens, getQuote } from "@/lib/api";
 import { formatTokenAmount, parseTokenAmount } from "@/lib/utils";
 import TokenSelector from "@/components/TokenSelector";
 import QuoteCard from "@/components/QuoteCard";
@@ -22,15 +17,8 @@ export default function Home() {
   const [inputMode, setInputMode] = useState<"in" | "out">("in");
   const [quotes, setQuotes] = useState<SwapQuote[]>([]);
   const [selectedQuote, setSelectedQuote] = useState<SwapQuote | null>(null);
-  const [liquidityQuotes, setLiquidityQuotes] = useState<LiquidityQuote[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingLiquidity, setLoadingLiquidity] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"swap" | "liquidity">("swap");
-
-  // Liquidity state
-  const [amountA, setAmountA] = useState("");
-  const [amountB, setAmountB] = useState("");
 
   useEffect(() => {
     getSupportedChains().then(setChains).catch(console.error);
@@ -125,49 +113,8 @@ export default function Home() {
     }, 500); // 디바운스
 
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountIn, amountOut, tokenIn, tokenOut, selectedChainId, inputMode]);
-
-  // Liquidity quotes fetch
-  useEffect(() => {
-    if (activeTab === "liquidity") {
-      const timeoutId = setTimeout(() => {
-        if (!tokenIn || !tokenOut || !selectedChainId) return;
-        if (
-          !amountA ||
-          parseFloat(amountA) <= 0 ||
-          !amountB ||
-          parseFloat(amountB) <= 0
-        ) {
-          setLiquidityQuotes([]);
-          return;
-        }
-
-        setLoadingLiquidity(true);
-        (async () => {
-          try {
-            const amountAWei = parseTokenAmount(amountA, tokenIn.decimals);
-            const amountBWei = parseTokenAmount(amountB, tokenOut.decimals);
-
-            const result = await getLiquidityQuote(
-              selectedChainId,
-              tokenIn.address,
-              tokenOut.address,
-              amountAWei,
-              amountBWei
-            );
-            setLiquidityQuotes(result.quotes);
-          } catch (err) {
-            console.error("Failed to fetch liquidity quotes:", err);
-            setLiquidityQuotes([]);
-          } finally {
-            setLoadingLiquidity(false);
-          }
-        })();
-      }, 500);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [amountA, amountB, tokenIn, tokenOut, selectedChainId, activeTab]);
 
   const handleSwapTokens = () => {
     const temp = tokenIn;
@@ -195,32 +142,6 @@ export default function Home() {
             DEX Aggregator
           </h1>
 
-          {/* Tabs */}
-          <div className="mb-6 flex gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-            <button
-              type="button"
-              onClick={() => setActiveTab("swap")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
-                activeTab === "swap"
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                  : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-              }`}
-            >
-              Swap
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("liquidity")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
-                activeTab === "liquidity"
-                  ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                  : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-              }`}
-            >
-              Liquidity
-            </button>
-          </div>
-
           {/* Chain Selector */}
           <div className="mb-4">
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -239,251 +160,140 @@ export default function Home() {
             </select>
           </div>
 
-          {/* Swap Tab */}
-          {activeTab === "swap" && (
-            <>
-              {/* Swap Card */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="space-y-4">
-                  {/* Token In */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        From
-                      </label>
-                      {inputMode === "in" && (
-                        <span className="text-xs text-gray-500">
-                          Enter amount
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <TokenSelector
-                        chainId={selectedChainId}
-                        selectedToken={tokenIn}
-                        onSelect={setTokenIn}
-                        label="Token In"
-                      />
-                      <input
-                        type="number"
-                        placeholder="0.0"
-                        value={amountIn}
-                        onChange={(e) => {
-                          setAmountIn(e.target.value);
-                          setInputMode("in");
-                        }}
-                        onFocus={() => setInputMode("in")}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Swap Button */}
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={handleSwapTokens}
-                      className="rounded-full bg-gray-200 p-2 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-                    >
-                      <svg
-                        className="h-6 w-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Token Out */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        To
-                      </label>
-                      {inputMode === "out" && (
-                        <span className="text-xs text-gray-500">
-                          Enter amount
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <TokenSelector
-                        chainId={selectedChainId}
-                        selectedToken={tokenOut}
-                        onSelect={setTokenOut}
-                        label="Token Out"
-                      />
-                      <input
-                        type="number"
-                        placeholder="0.0"
-                        value={amountOut}
-                        onChange={(e) => {
-                          setAmountOut(e.target.value);
-                          setInputMode("out");
-                        }}
-                        onFocus={() => setInputMode("out")}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      />
-                    </div>
-                  </div>
+          {/* Swap Card */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div className="space-y-4">
+              {/* Token In */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    From
+                  </label>
+                  {inputMode === "in" && (
+                    <span className="text-xs text-gray-500">Enter amount</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <TokenSelector
+                    chainId={selectedChainId}
+                    selectedToken={tokenIn}
+                    onSelect={setTokenIn}
+                    label="Token In"
+                  />
+                  <input
+                    type="number"
+                    placeholder="0.0"
+                    value={amountIn}
+                    onChange={(e) => {
+                      setAmountIn(e.target.value);
+                      setInputMode("in");
+                    }}
+                    onFocus={() => setInputMode("in")}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  />
                 </div>
               </div>
-
-              {/* Quotes List */}
-              {loading && (
-                <div className="mt-4 text-center text-gray-500">
-                  Loading quotes...
-                </div>
-              )}
-
-              {error && (
-                <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                  {error}
-                </div>
-              )}
-
-              {!loading && !error && quotes.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                    Available Quotes ({quotes.length})
-                  </h2>
-                  <div className="space-y-3">
-                    {quotes.map((quote, index) => (
-                      <QuoteCard
-                        key={`${quote.dex}-${index}`}
-                        quote={quote}
-                        tokenOut={inputMode === "in" ? tokenOut : tokenIn}
-                        isSelected={
-                          selectedQuote?.dex === quote.dex &&
-                          selectedQuote?.chainId === quote.chainId
-                        }
-                        onSelect={() => setSelectedQuote(quote)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Swap Button */}
-              {selectedQuote && (
+              <div className="flex justify-center">
                 <button
                   type="button"
-                  onClick={handleSwap}
-                  className="mt-6 w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={handleSwapTokens}
+                  className="rounded-full bg-gray-200 p-2 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                 >
-                  Swap via {selectedQuote.dex}
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                    />
+                  </svg>
                 </button>
-              )}
-            </>
-          )}
-
-          {/* Liquidity Tab */}
-          {activeTab === "liquidity" && (
-            <>
-              {/* Liquidity Card */}
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="space-y-4">
-                  {/* Token A */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Token A
-                      </label>
-                    </div>
-                    <div className="flex gap-2">
-                      <TokenSelector
-                        chainId={selectedChainId}
-                        selectedToken={tokenIn}
-                        onSelect={setTokenIn}
-                        label="Token A"
-                      />
-                      <input
-                        type="number"
-                        placeholder="0.0"
-                        value={amountA}
-                        onChange={(e) => setAmountA(e.target.value)}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Token B */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Token B
-                      </label>
-                    </div>
-                    <div className="flex gap-2">
-                      <TokenSelector
-                        chainId={selectedChainId}
-                        selectedToken={tokenOut}
-                        onSelect={setTokenOut}
-                        label="Token B"
-                      />
-                      <input
-                        type="number"
-                        placeholder="0.0"
-                        value={amountB}
-                        onChange={(e) => setAmountB(e.target.value)}
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              {/* Liquidity Quotes */}
-              {loadingLiquidity && (
-                <div className="mt-4 text-center text-gray-500">
-                  Loading liquidity quotes...
+              {/* Token Out */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    To
+                  </label>
+                  {inputMode === "out" && (
+                    <span className="text-xs text-gray-500">Enter amount</span>
+                  )}
                 </div>
-              )}
-
-              {!loadingLiquidity && liquidityQuotes.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                    Available Liquidity Quotes ({liquidityQuotes.length})
-                  </h2>
-                  <div className="space-y-3">
-                    {liquidityQuotes.map((quote, index) => (
-                      <div
-                        key={`${quote.dex}-${index}`}
-                        className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold">{quote.dex}</h3>
-                            <div className="mt-2 text-lg font-bold">
-                              {formatTokenAmount(quote.lpTokens, 18)} LP Tokens
-                            </div>
-                            <div className="mt-1 text-sm text-gray-500">
-                              Pool Share: {quote.share.toFixed(4)}%
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex gap-2">
+                  <TokenSelector
+                    chainId={selectedChainId}
+                    selectedToken={tokenOut}
+                    onSelect={setTokenOut}
+                    label="Token Out"
+                  />
+                  <input
+                    type="number"
+                    placeholder="0.0"
+                    value={amountOut}
+                    onChange={(e) => {
+                      setAmountOut(e.target.value);
+                      setInputMode("out");
+                    }}
+                    onFocus={() => setInputMode("out")}
+                    className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-right text-lg focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  />
                 </div>
-              )}
+              </div>
+            </div>
+          </div>
 
-              {!loadingLiquidity &&
-                liquidityQuotes.length === 0 &&
-                amountA &&
-                amountB && (
-                  <div className="mt-4 text-center text-gray-500">
-                    No liquidity quotes available
-                  </div>
-                )}
-            </>
+          {/* Quotes List */}
+          {loading && (
+            <div className="mt-4 text-center text-gray-500">
+              Loading quotes...
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && quotes.length > 0 && (
+            <div className="mt-6">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+                Available Quotes ({quotes.length})
+              </h2>
+              <div className="space-y-3">
+                {quotes.map((quote, index) => (
+                  <QuoteCard
+                    key={`${quote.dex}-${index}`}
+                    quote={quote}
+                    tokenOut={inputMode === "in" ? tokenOut : tokenIn}
+                    isSelected={
+                      selectedQuote?.dex === quote.dex &&
+                      selectedQuote?.chainId === quote.chainId
+                    }
+                    onSelect={() => setSelectedQuote(quote)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Swap Button */}
+          {selectedQuote && (
+            <button
+              type="button"
+              onClick={handleSwap}
+              className="mt-6 w-full rounded-lg bg-blue-600 px-6 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Swap via {selectedQuote.dex}
+            </button>
           )}
         </div>
       </div>

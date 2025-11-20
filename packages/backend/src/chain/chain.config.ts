@@ -52,6 +52,13 @@ export const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
         factory: '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac',
         fee: '0.003',
       },
+      pancakeV2: {
+        router: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+        factory: '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73',
+        pool: '0x0000000000000000000000000000000000000000',
+        poolFactory: '0x0000000000000000000000000000000000000000',
+        fee: '0.003',
+      },
     },
   },
   [ChainId.BASE]: {

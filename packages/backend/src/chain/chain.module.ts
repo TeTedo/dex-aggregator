@@ -7,4 +7,3 @@ import { ChainService } from './chain.service';
   exports: [ChainService],
 })
 export class ChainModule {}
-

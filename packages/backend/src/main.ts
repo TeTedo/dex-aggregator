@@ -6,7 +6,7 @@ async function bootstrap() {
 
   // CORS 설정 (프론트엔드와 통신을 위해)
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   });
 
