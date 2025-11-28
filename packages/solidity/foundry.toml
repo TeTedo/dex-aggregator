@@ -1,0 +1,23 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["lib", "dependencies"]
+solc = "0.8.28"
+optimizer = true
+optimizer_runs = 9999
+via_ir = false
+
+gas_reports = ["*"]
+
+remappings = [
+    "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.0.2/",
+    "forge-std/=dependencies/forge-std-1.12.0/src/",
+]
+
+[dependencies]
+forge-std = "1.12.0"
+"@openzeppelin-contracts" = "5.0.2"
+
+[soldeer]
+remappings_generate = true
+remappings_location = "config"

@@ -113,8 +113,7 @@ export default function Home() {
     }, 500); // 디바운스
 
     return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amountIn, amountOut, tokenIn, tokenOut, selectedChainId, inputMode]);
+  }, [amountIn, tokenIn, tokenOut, selectedChainId, inputMode]);
 
   const handleSwapTokens = () => {
     const temp = tokenIn;
