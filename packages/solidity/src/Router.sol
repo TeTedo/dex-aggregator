@@ -39,8 +39,10 @@ contract Router is IRouter, Maintainable, Recoverable {
         return _adaptors.values();
     }
 
-    function getQuoteWithNoSplit(address tokenIn, address tokenOut, uint256 amountIn) public view returns (uint256 amountOut) {
-        uint256 bestAmountOut = 0;
+    function getQuoteWithNoSplit(address tokenIn, address tokenOut, uint256 amountIn) public view returns (uint256 bestAmountOut) {
+        uint256 _amountIn = amountIn;
+        uint256 _feeAmount = _amountIn.mulDiv(fee, FEE_DENOMINATOR);
+        _amountIn = _amountIn - _feeAmount;
         for (uint256 i = 0; i < _adaptors.length(); i++) {
             address adaptor = _adaptors.at(i);
             uint256 _amountOut = BaseAdaptor(adaptor).getQuote(tokenIn, tokenOut, amountIn);
@@ -48,7 +50,6 @@ contract Router is IRouter, Maintainable, Recoverable {
                 bestAmountOut = _amountOut;
             }
         }
-        return bestAmountOut - (bestAmountOut * fee / FEE_DENOMINATOR);
     }
 
     function swapWithExactPathAndExactAdaptor(address[] calldata path, address[] calldata adaptors, uint256 amountIn) public returns (uint256 amountOut) {
