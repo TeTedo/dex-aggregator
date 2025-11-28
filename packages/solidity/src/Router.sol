@@ -52,13 +52,14 @@ contract Router is IRouter, Maintainable, Recoverable {
         }
     }
 
-    function swapWithExactPathAndExactAdaptor(address[] calldata path, address[] calldata adaptors, uint256 amountIn) public returns (uint256 amountOut) {
+    function swapWithExactPathAndExactAdaptor(address[] calldata path, uint256[] calldata adaptorIndexes, uint256 amountIn) public returns (uint256 amountOut) {
         uint256 _amountIn = amountIn;
         uint256 _feeAmount = _amountIn.mulDiv(fee, FEE_DENOMINATOR);
         _amountIn = _amountIn - _feeAmount;
         uint256 _amountOut = 0;
-        for (uint256 i = 0; i < adaptors.length; i++) {
-            address adaptor = adaptors[i];
+        for (uint256 i = 0; i < adaptorIndexes.length; i++) {
+            uint256 adaptorIndex = adaptorIndexes[i];
+            address adaptor = _adaptors.at(adaptorIndex);
             _amountOut = BaseAdaptor(adaptor).swap(path[i], path[i + 1], _amountIn);
             _amountIn = _amountOut;
         }

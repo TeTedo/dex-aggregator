@@ -6,5 +6,5 @@ interface IRouter {
     function getAdaptors() external view returns (address[] memory);
     function removeAdaptor(address adaptor) external;
     function getQuoteWithNoSplit(address tokenIn, address tokenOut, uint256 amountIn) external view returns (uint256 amountOut);
-    function swapWithExactPathAndExactAdaptor(address[] calldata path, address[] calldata adaptors, uint256 amountIn) external returns (uint256 amountOut);
+    function swapWithExactPathAndExactAdaptor(address[] calldata path, uint256[] calldata adaptorIndexes, uint256 amountIn) external returns (uint256 amountOut);
 }
